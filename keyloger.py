@@ -1,5 +1,4 @@
-import pygetwindow as gw
-import time
+
 
 
 def track_active_window():

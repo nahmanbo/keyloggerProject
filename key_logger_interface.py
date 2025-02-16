@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
-
+from typing import Dict
 
 class KeyLoggerInterface(ABC):
     @abstractmethod
@@ -12,5 +11,9 @@ class KeyLoggerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_logged_keys(self) -> List[str]:
+    def get_logged_keys(self) -> Dict[str, str]:
+        pass
+
+    @abstractmethod
+    def print_key_logs(self) -> None:
         pass

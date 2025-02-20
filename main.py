@@ -1,4 +1,4 @@
-from key_logger_manager import KeyLoggerManager
+from key_loger_manager import KeyLoggerManager
 
 if __name__ == "__main__":
     manager = KeyLoggerManager()

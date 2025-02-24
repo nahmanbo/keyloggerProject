@@ -9,6 +9,7 @@ class KeyLoggerInterface(ABC):
         stop_logging: Stops logging keyboard input.
         get_logged_keys: Returns a nested dictionary containing logged keys.
         get_machine_name: Returns the name of the machine.
+        reset_logs: Resets the key logs dictionary.
     """
 
     @abstractmethod

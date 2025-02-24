@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עמוד הבית</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/dashboard.js"></script>
+</head>
+<body>
+    <h1 id="welcome-message">המערכת טוענת...</h1>
+
+    <!-- Background Video -->
+    <video autoplay loop muted playsinline id="background-video">
+        <source src="assets/background.mp4" type="video/mp4">
+    </video>
+
+    <!-- Clock and Username (Displayed in the corner) -->
+    <div id="clock"></div>
+    <div id="username"></div>
+
+    <!-- Hidden content until loaded -->
+    <div id="dashboard-content" class="hidden">
+        <!-- טבלה להציג את הנתונים -->
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>שם</th>
+                    <th>גיל</th>
+                    <th>עיר</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- שורות הנתונים יוצגו כאן -->
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

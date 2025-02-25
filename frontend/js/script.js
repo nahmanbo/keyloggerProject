@@ -4,12 +4,14 @@ const users = {
     "chagai_t": "the_king"
 };
 
+// הצגת הודעת שגיאה
 function showError(message) {
     const errorElement = document.getElementById("error-message");
     errorElement.textContent = message;
-    errorElement.style.display = "block"; 
+    errorElement.style.display = "block";
 }
 
+// עדכון השעון
 function updateClock() {
     const clock = document.getElementById("clock");
     const now = new Date();
@@ -19,28 +21,61 @@ function updateClock() {
     clock.textContent = `${hours}:${minutes}:${seconds}`;
 }
 
-setInterval(updateClock, 1000);
-updateClock();
-
+// מאזין לאירועים בטעינת הדף
 document.addEventListener("DOMContentLoaded", function() {
+    initializeForm();
+    startClock();
+});
+
+// אתחול הפונקציות
+function initializeForm() {
     const form = document.querySelector("form");
+    const usernameInput = form.querySelector("input[type='text']");
+    const passwordInput = form.querySelector("input[type='password']");
 
     form.addEventListener("submit", function(event) {
-        event.preventDefault(); 
+        event.preventDefault(); // מונע שליחה אוטומטית
 
-        const username = form.querySelector("input[type='text']").value;
-        const password = form.querySelector("input[type='password']").value;
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
 
-        if (!username || !password) {
-            showError("אנא מלא את כל השדות");
-            return;
-        }
-
-        if (users[username] && users[username] === password) {
-            localStorage.setItem("username", username); 
-            window.location.href = "dashboard.html";
-        } else {
-            showError("שם משתמש או סיסמה שגויים");
-        }
+        handleFormSubmit(username, password);
     });
-});
+}
+
+// טיפול בשליחת הטופס
+function handleFormSubmit(username, password) {
+    // ניקוי הודעות שגיאה ישנות
+    hideErrorMessage();
+
+    // בדוק אם השדות ריקים
+    if (!username || !password) {
+        showError("אנא מלא את כל השדות");
+        return;
+    }
+
+    // בדוק אם שם המשתמש והסיסמה נכונים
+    if (isValidUser(username, password)) {
+        localStorage.setItem("username", username); // שמור את שם המשתמש
+        window.location.href = "system.html"; // הפנה לדף המערכת
+    } else {
+        showError("שם משתמש או סיסמה שגויים");
+    }
+}
+
+// בדוק אם המשתמש קיים
+function isValidUser(username, password) {
+    return users[username] && users[username] === password;
+}
+
+// הסתרת הודעת שגיאה
+function hideErrorMessage() {
+    const errorElement = document.getElementById("error-message");
+    errorElement.style.display = "none";
+}
+
+// התחלת שעון עדכון כל שניה
+function startClock() {
+    updateClock();
+    setInterval(updateClock, 1000);
+}

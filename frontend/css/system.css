@@ -1,0 +1,140 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    background-color: #0A192F;
+}
+
+#background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(50%) contrast(110%);
+}
+
+#clock {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0, 255, 170, 0.5);
+    text-align: center;
+    font-size: 26px;
+    color: #64FFDA;
+    font-weight: bold;
+    backdrop-filter: blur(8px);
+}
+
+#username {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0, 255, 170, 0.5);
+    text-align: center;
+    font-size: 26px;
+    color: #64FFDA;
+    font-weight: bold;
+    backdrop-filter: blur(8px);
+}
+
+h1, h2 {
+    text-align: center;
+    font-weight: bold;
+    color: #F8F8F2;
+    text-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
+    animation: fadeIn 2s ease-in-out, neonGlow 1.5s infinite alternate;
+}
+
+h1 {
+    font-size: 40px;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+#message-container {
+    position: absolute;
+    top: 80px;
+    right: 10px;
+    background-color: black;
+    width: 820px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px rgba(0, 255, 170, 0.5);
+    color: #F8F8F2;
+    text-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: right;
+    direction: rtl;
+}
+
+.message {
+    font-size: 18px;
+    direction: rtl; /* תומך בשפות כמו עברית */
+    white-space: nowrap; /* מונע את העברת השורות */
+    position: relative; /* למקם את הקו המהבהב בתוך אלמנט הטקסט */
+    justify-content: flex-end; /* הצמדת התוכן לימין */
+
+}
+
+.cursor {
+    position: absolute;
+    right: 0; /* המיקום של הקו המהבהב מצד ימין של הטקסט */
+    top: 0;
+    font-size: 18px;
+    font-weight: bold;
+    animation: blink 0.7s infinite;
+    visibility: hidden; /* הקו המהבהב מתחיל כלא נראה */
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+
+
+.button-container {
+    display: flex;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px #df0404b3;
+    justify-content: center;
+    margin-top: 40px;
+    margin-block-end: 40px;
+}
+
+.custom-button {
+    background-color: #0A192F;
+    color: white;
+    padding: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    width: 240px; 
+    box-shadow: 0px 0px 15px rgba(20, 227, 245, 0.7);
+    transition: transform 0.2s, background-color 0.3s;
+    margin: 10px; 
+}
+
+.custom-button:hover {
+    background-color: #df0404b3;
+    transform: scale(1.05);}
+

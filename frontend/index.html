@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>צופן דוד-התחברות</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/script.js"></script>
+</head>
+<body>
+    <video autoplay loop muted playsinline id="background-video">
+        <source src="assets/background.mp4" type="video/mp4">
+    </video>
+    <div id="clock"></div>
+    <div class="login-message">
+        <h1>!ברוך הבא</h1>
+        <h2>.הגישה למערכת צופן דוד מאובטחת. נא להזין פרטי זיהוי</h2>
+    </div>
+    <div class="login-container">
+        <form>
+            <input type="text" placeholder="שם משתמש">
+            <input type="password" placeholder="סיסמה">
+            <button>התחבר</button>
+            <div id="error-message"></div>
+
+        </form>
+    </div>
+</body>
+</html>

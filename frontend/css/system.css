@@ -71,17 +71,19 @@ h2 {
     top: 80px; /* מרחק מהחלק העליון */
     left: 40px; /* מרחק מהצד השמאלי */
     right: 40px; /* מרחק מהצד הימני */
-    
+    max-height: calc(100vh - 120px); /* גובה הדף (100vh) פחות 80px של ה-top ועוד 40px רווח תחתון */
+    overflow-y: auto; /* מאפשר גלילה אנכית במקרה שהטקסט חורג */
     background-color: black;
     border-radius: 12px;
     box-shadow: 0px 0px 20px rgba(0, 255, 170, 0.5);
     color: #F8F8F2;
     text-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
-    padding: 20px;
+    padding: 10px 20px;
     font-family: Arial, sans-serif;
     text-align: right;
     direction: rtl;
 }
+
 
 
 .message {
@@ -116,7 +118,7 @@ h2 {
     border-radius: 12px;
     box-shadow: 0px 0px 20px #0A192F;
     justify-content: center;
-    margin-top: 40px;
+    margin-top: 20px;
     margin-block-end: 40px;
 }
 
@@ -141,14 +143,105 @@ h2 {
     transform: scale(1.05);
 }
 
-.menu-computers .menu-button {
+.menu-machines .menu-button {
     width: 230px; 
     height: 40px; 
     font-size: 24px;
 }
 
-.menu-files .menu-button {
+.menu-day .menu-button {
     width: 160px; 
     height: 30px; 
     font-size: 15px;
+}
+.menu-hour.menu-button {
+    width: 160px; 
+    height: 30px; 
+    font-size: 15px;
+}
+
+.menu-file.menu-button {
+    width: 160px; 
+    height: 30px; 
+    font-size: 15px;
+}
+
+#file-upload-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#error-message {
+    color: red;
+    margin-top: 10px;
+    font-size: 14px;
+    display: none;
+}
+
+.file-upload-container {
+    width: 320px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px rgba(0, 255, 170, 0.5);
+    text-align: center;
+    color: #64FFDA;
+    font-weight: bold;
+    backdrop-filter: blur(8px);
+    animation: slideIn 1.5s ease-in-out;
+}
+
+.file-upload-container input {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin: 12px auto;
+    border: 1px solid #64FFDA;
+    border-radius: 5px;
+    display: block;
+    text-align: center;
+    background-color: black;
+    color: #F8F8F2;
+    font-size: 18px;
+    font-weight: bold;
+    outline: none;
+}
+
+.file-upload-container input::placeholder {
+    color: #F8F8F2;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.file-upload-container button {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin: 12px auto;
+    background: #64FFDA;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0px 0px 10px rgba(20, 227, 245, 0.7);
+    transition: all 0.3s ease-in-out;
+}
+
+.file-upload-container button:hover {
+    background: #F8F8F2;
+    box-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes neonGlow {
+    from { text-shadow: 0px 0px 10px rgba(100, 255, 218, 0.5); }
+    to { text-shadow: 0px 0px 20px rgba(100, 255, 218, 1); }
 }

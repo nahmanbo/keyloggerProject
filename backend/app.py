@@ -71,10 +71,10 @@ def upload():
 
     return '', 204
 #כל הפונקציות get
-@app.route('/get_machine_name', methods=['GET'])
-def get_machine_name():
+@app.route('/get_machines', methods=['GET'])
+def get_machines():
      # הדפסה כדי לוודא שהבקשה הגיעה
-    directories = {"names": [d for d in os.listdir("data") if os.path.isdir(os.path.join("data", d))]}
+    directories = {"machines": [d for d in os.listdir("data") if os.path.isdir(os.path.join("data", d))]}
     response = jsonify(directories)
       # הדפסת הנתונים שנשלחים חזרה ללקוח
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -117,8 +117,8 @@ def get_day_list(name):
     return response
 
 
-@app.route('/get_day_By_our_list/<name>/<day>', methods=['GET'])
-def get_day_By_our_list(name,day):
+@app.route('/get_hour_list/<name>/<day>', methods=['GET'])
+def get_hour_list(name,day):
     file_list = []
     directory_path = get_file_path(f'{name}')
     files = os.listdir(directory_path)
@@ -129,10 +129,13 @@ def get_day_By_our_list(name,day):
             if file[0:10]==day[0:10]and file[0:13]!=our:
                 file_list.append(file[11:13]+":00")
                 our = file[0:13]
-    return file_list
 
-@app.route('/get_day_By_our_By_5minet_list/<name>/<day>/<our>', methods=['GET'])
-def get_day_By_our_By_5minet_list(name,day,our):
+    response = jsonify({"hours": file_list})
+    response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
+    return response
+
+@app.route('/get_file_list/<name>/<day>/<our>', methods=['GET'])
+def get_file_list(name,day,our):
     file_list = []
     directory_path = get_file_path(f'{name}')
     files =os.listdir(directory_path)
@@ -144,7 +147,10 @@ def get_day_By_our_By_5minet_list(name,day,our):
 
                 file_list.append((file[11:-4]).replace("_",":"))
                 our = file[0:13]
-    return file_list
+    response = jsonify({"filse": file_list})
+    response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
+    print(response)
+    return response
 
 @app.route('/get_by_d_o_m/<name>/<time>', methods=['GET'])#שולחים פו את הקובץ בעצמו
 def get_by_d_o_m(name,time):

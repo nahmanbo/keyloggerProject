@@ -169,3 +169,99 @@ function startClock() {
     updateClock();
     setInterval(updateClock, 1000);
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    const fileInput = document.getElementById("file-upload");
+    const fileLabel = document.getElementById("file-label");
+    const uploadButton = document.getElementById("upload-button");
+    const uploadMessage = document.getElementById("upload-message");
+
+    // עדכון שם הקובץ שנבחר
+    fileInput.addEventListener("change", function() {
+        if (fileInput.files.length > 0) {
+            fileLabel.textContent = `📂 ${fileInput.files[0].name}`;
+        } else {
+            fileLabel.textContent = "בחר קובץ .bin";
+        }
+    });
+
+    // כפתור העלאת הקובץ
+    uploadButton.addEventListener("click", function() {
+        if (!fileInput.files.length) {
+            uploadMessage.textContent = "❌ אנא בחר קובץ .bin להעלאה.";
+            uploadMessage.style.color = "red";
+            return;
+        }
+
+        const file = fileInput.files[0];
+
+        if (!file.name.endsWith(".bin")) {
+            uploadMessage.textContent = "❌ רק קבצים עם סיומת .bin נתמכים!";
+            uploadMessage.style.color = "red";
+            return;
+        }
+
+        uploadMessage.textContent = `✅ הקובץ "${file.name}" נטען בהצלחה!`;
+        uploadMessage.style.color = "green";
+
+        // מחיקת האלמנטים של ההעלאה בלבד אחרי 2 שניות
+        setTimeout(() => {
+            fileLabel.style.display = "none";
+            uploadButton.style.display = "none";
+            fileInput.style.display = "none";
+            uploadMessage.style.display = "none";
+        }, 2000);
+    });
+});
+
+
+async function decryptDataToFile(encryptedString, keyFile, outputFileName = "decrypted_data.json") {
+    try {
+        // קריאת המפתח מהקובץ
+        const keyResponse = await fetch(keyFile);
+        const keyArrayBuffer = await keyResponse.arrayBuffer();
+        const key = new Uint8Array(keyArrayBuffer);
+
+        // פיצול הנתונים לפי שורות (כל דקה)
+        const encryptedLines = encryptedString.split("\n");
+        const decryptedData = {};
+
+        encryptedLines.forEach((line, index) => {
+            if (line.trim() === "") return;
+
+            // המרת מחרוזת מוצפנת מבסיס 64 לבייטים
+            const encryptedBytes = Uint8Array.from(atob(line), c => c.charCodeAt(0));
+
+            // ביצוע XOR עם המפתח המחזורי
+            const decryptedBytes = encryptedBytes.map((byte, i) => byte ^ key[i % key.length]);
+
+            // המרת הבייטים חזרה למחרוזת JSON
+            const jsonString = new TextDecoder().decode(decryptedBytes);
+
+            try {
+                // המרת JSON לאובייקט ושמירתו במילון
+                decryptedData[`minute_${index + 1}`] = JSON.parse(jsonString);
+            } catch (e) {
+                console.error("Failed to parse JSON:", e);
+            }
+        });
+
+        // המרת האובייקט למחרוזת JSON
+        const jsonData = JSON.stringify(decryptedData, null, 2);
+
+        // יצירת קובץ JSON להורדה
+        const blob = new Blob([jsonData], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = outputFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        console.log("Decrypted data saved as:", outputFileName);
+    } catch (error) {
+        console.error("Decryption failed:", error);
+    }
+}
+
+

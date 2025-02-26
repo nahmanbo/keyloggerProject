@@ -138,3 +138,59 @@ h2 {
     background-color: #df0404b3;
     transform: scale(1.05);}
 
+#file-upload-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* הסתרת קלט הקובץ המקורי */
+#file-upload {
+    display: none;
+}
+
+/* תווית ככפתור לבחירת קובץ */
+#file-label {
+    display: inline-block;
+    background-color: #64FFDA;
+    color: black;
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(100, 255, 218, 0.7);
+    transition: all 0.3s ease-in-out;
+}
+
+#file-label:hover {
+    background: #F8F8F2;
+    box-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
+}
+
+/* כפתור העלאה */
+#upload-button {
+    background-color: #64FFDA;
+    color: black;
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(100, 255, 218, 0.7);
+    transition: all 0.3s ease-in-out;
+    margin-left: 10px;
+}
+
+#upload-button:hover {
+    background: #F8F8F2;
+    box-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
+}
+
+/* הודעת סטטוס */
+#upload-message {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}

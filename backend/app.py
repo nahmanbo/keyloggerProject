@@ -1,4 +1,5 @@
-from flask import Flask, request, json, jsonify
+
+from flask import Flask, request, jsonify
 import os
 
 app = Flask(__name__)
@@ -32,7 +33,7 @@ def check_if_open_new(file_name, name_of_new_folder):
 
 # יצירת קובץ חדש
 def create_file(file_name, new_data):
-    """ יוצר קובץ חדש עם נתוני JSON. """
+    """ יוצר קובץ חדש עם נתוני txt. """
     name_of_new_folder = f'{next(iter(new_data.keys()))}.txt'
     data = next(iter(new_data.values()))
 
@@ -55,7 +56,6 @@ def upload():
 
         if check_if_open_new(file_name, name_of_new_folder):
             create_file(file_name, new_data)
-            print("=======================++==================")
         else:
 
             files = os.listdir(data_directory)
@@ -63,8 +63,7 @@ def upload():
             name_of_latest_file = os.path.basename(latest_file)
             # קריאת תוכן הקובץ העדכני
             with open(get_file_path(file_name,name_of_latest_file ), 'a', encoding='utf-8') as f:
-                f.write('\n' + str(new_data))  # מוסיף שורה חדשה עם הנתונים
-
+                f.write('\n' + next(iter(new_data.values())))  # מוסיף שורה חדשה עם הנתונים
 
     else:  # אם אין תיקיית מחשב, יוצרים חדשה
         os.makedirs(data_directory, exist_ok=True)
@@ -74,10 +73,10 @@ def upload():
 #כל הפונקציות get
 @app.route('/get_machine_name', methods=['GET'])
 def get_machine_name():
-    print("Getting machine names...")  # הדפסה כדי לוודא שהבקשה הגיעה
+     # הדפסה כדי לוודא שהבקשה הגיעה
     directories = {"names": [d for d in os.listdir("data") if os.path.isdir(os.path.join("data", d))]}
     response = jsonify(directories)
-    print(directories)  # הדפסת הנתונים שנשלחים חזרה ללקוח
+      # הדפסת הנתונים שנשלחים חזרה ללקוח
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
@@ -88,19 +87,100 @@ def get_machine_name():
 def get_by_name(name):
     data_directory=get_file_path(f'{name}')
     files_data = {}
+    for file_name in os.listdir(data_directory):
+        file_path = os.path.join(data_directory, file_name)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            files_data[file_name] = f.read()
+    return jsonify (files_data)
+
+@app.route('/get_day_list/<name>', methods=['GET'])
+def get_day_lodgos(name):
+    # הגדרת הנתיב לתיקייה
+    directory_path = get_file_path(f'{name}')
+    # קבלת רשימת הקבצים בתיקייה
+    # אם אתה רוצה רק את הקבצים במערך
+    file_list = []
+    files = os.listdir(directory_path)
+    if files:
+        day=files[0][0:10]
+
+        file_list.append(day)
+        # הוספת כל יום שונה למערך
+        for file in files:
+
+            if file[0:10]!=day:
+                file_list.append(file[0:10])
+                day= file[0:10]
+    return file_list
+@app.route('/get_day_By_our_list/<name>/<day>', methods=['GET'])
+def get_day_By_our_list(name,day):
+    file_list = []
+    directory_path = get_file_path(f'{name}')
+    files = os.listdir(directory_path)
+    our=0
+
+    if files:
+        for file in files:
+            if file[0:10]==day[0:10]and file[0:13]!=our:
+                file_list.append(file[11:13]+":00")
+                our = file[0:13]
+    return file_list
+
+@app.route('/get_day_By_our_By_5minet_list/<name>/<day>/<our>', methods=['GET'])
+def get_day_By_our_By_5minet_list(name,day,our):
+    file_list = []
+    directory_path = get_file_path(f'{name}')
+    files =os.listdir(directory_path)
+
+    if files:
+        for file in files:
+
+            if file[0:10] == day[0:10] and file[11:13] == our[11:13]:
+
+                file_list.append((file[11:-4]).replace("_",":"))
+                our = file[0:13]
+    return file_list
+
+@app.route('/get_by_d_o_m/<name>/<time>', methods=['GET'])#שולחים פו את הקובץ בעצמו
+def get_by_d_o_m(name,time):
+    print(time)
+    directory_path = get_file_path(name)
+    print(name)
+    files =os.listdir(directory_path)
+    print("dsds")
+    for file in files:
+        print(file,time)
+        if file[:-4] == time:
+            with open(get_file_path(name,file), 'r', encoding='utf-8') as f:
+                 return jsonify( f.read())  # מחזיר את התוכן של הקובץ
+    return jsonify({"error": "File not found"}), 404
+
+@app.route('/', methods=['GET'])
+
+def show_data():
+    day_dic={}
+    files_data = {}
+    data_directory = get_file_path("DESKTOP-8823H7O")
+    day_now = ((os.listdir(data_directory))[0])
 
     for file_name in os.listdir(data_directory):
         file_path = os.path.join(data_directory, file_name)
-
         with open(file_path, 'r', encoding='utf-8') as f:
-            files_data[file_name] = f.read()
+            if day_now !=file_name[0:10] :#and day_dic:
+                day_dic[day_now[0:10]] =files_data
+                files_data={}
+                day_now=file_name[0:10]
+                files_data[file_name] = f.read()
+            else:
 
-    return jsonify (files_data)
+                files_data[file_name] = f.read()
 
-@app.route('/', methods=['GET'])
-def show_data():
-    return "שרת פועל כרגיל."
+        day_dic[day_now]=files_data[file_name]
+
+    print(day_dic)
+
+    return day_dic
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

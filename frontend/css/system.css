@@ -67,11 +67,12 @@ h2 {
 }
 
 #message-container {
-    position: absolute;
-    top: 80px;
-    right: 10px;
+    position: absolute; /* אם רוצים שהאלמנט יזוז עם הדף, ניתן לשנות ל-fixed */
+    top: 80px; /* מרחק מהחלק העליון */
+    left: 40px; /* מרחק מהצד השמאלי */
+    right: 40px; /* מרחק מהצד הימני */
+    
     background-color: black;
-    width: 820px;
     border-radius: 12px;
     box-shadow: 0px 0px 20px rgba(0, 255, 170, 0.5);
     color: #F8F8F2;
@@ -81,6 +82,7 @@ h2 {
     text-align: right;
     direction: rtl;
 }
+
 
 .message {
     font-size: 18px;
@@ -108,33 +110,45 @@ h2 {
 }
 
 
-
-.button-container {
+.menu-erea {
     display: flex;
+    flex-wrap: wrap;
     border-radius: 12px;
-    box-shadow: 0px 0px 20px #df0404b3;
+    box-shadow: 0px 0px 20px #0A192F;
     justify-content: center;
     margin-top: 40px;
     margin-block-end: 40px;
 }
 
-.custom-button {
+.menu-button {
     background-color: #0A192F;
     color: white;
-    padding: 10px;
-    font-size: 24px;
     font-weight: bold;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     text-align: center;
-    width: 240px; 
-    box-shadow: 0px 0px 15px rgba(20, 227, 245, 0.7);
+    box-shadow: 0px 0px 20px #0A192F;
     transition: transform 0.2s, background-color 0.3s;
-    margin: 10px; 
+    margin: 10px;
+    white-space: normal;  
+    word-wrap: break-word; 
+    flex-shrink: 0; 
 }
 
-.custom-button:hover {
+.menu-button:hover {
     background-color: #df0404b3;
-    transform: scale(1.05);}
+    transform: scale(1.05);
+}
 
+.menu-computers .menu-button {
+    width: 230px; 
+    height: 40px; 
+    font-size: 24px;
+}
+
+.menu-files .menu-button {
+    width: 160px; 
+    height: 30px; 
+    font-size: 15px;
+}

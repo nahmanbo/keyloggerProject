@@ -11,6 +11,11 @@ function showError(message) {
     errorElement.style.display = "block";
 }
 
+// ניקוי הודעת שגיאה
+function clearErrorMessage() {
+    document.getElementById("error-message").style.display = "none";
+}
+
 // עדכון השעון
 function updateClock() {
     const clock = document.getElementById("clock");
@@ -18,64 +23,52 @@ function updateClock() {
     const hours = now.getHours().toString().padStart(2, "0");
     const minutes = now.getMinutes().toString().padStart(2, "0");
     const seconds = now.getSeconds().toString().padStart(2, "0");
+
     clock.textContent = `${hours}:${minutes}:${seconds}`;
 }
 
-// מאזין לאירועים בטעינת הדף
-document.addEventListener("DOMContentLoaded", function() {
-    initializeForm();
-    startClock();
-});
+// הפעלת השעון
+function startClock() {
+    updateClock();
+    setInterval(updateClock, 1000);
+}
 
-// אתחול הפונקציות
-function initializeForm() {
+// אתחול טופס התחברות
+function setupLoginForm() {
     const form = document.querySelector("form");
     const usernameInput = form.querySelector("input[type='text']");
     const passwordInput = form.querySelector("input[type='password']");
 
     form.addEventListener("submit", function(event) {
         event.preventDefault(); // מונע שליחה אוטומטית
-
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        handleFormSubmit(username, password);
+        processLogin(usernameInput.value.trim(), passwordInput.value.trim());
     });
 }
 
-// טיפול בשליחת הטופס
-function handleFormSubmit(username, password) {
-    // ניקוי הודעות שגיאה ישנות
-    hideErrorMessage();
+// טיפול בשליחת טופס ההתחברות
+function processLogin(username, password) {
+    clearErrorMessage();
 
-    // בדוק אם השדות ריקים
     if (!username || !password) {
         showError("אנא מלא את כל השדות");
         return;
     }
 
-    // בדוק אם שם המשתמש והסיסמה נכונים
-    if (isValidUser(username, password)) {
-        localStorage.setItem("username", username); // שמור את שם המשתמש
-        window.location.href = "system.html"; // הפנה לדף המערכת
+    if (authenticateUser(username, password)) {
+        localStorage.setItem("username", username); // שמירת שם המשתמש
+        window.location.href = "system.html"; // הפניה למערכת
     } else {
         showError("שם משתמש או סיסמה שגויים");
     }
 }
 
-// בדוק אם המשתמש קיים
-function isValidUser(username, password) {
-    return users[username] && users[username] === password;
+// אימות משתמש
+function authenticateUser(username, password) {
+    return users[username] === password;
 }
 
-// הסתרת הודעת שגיאה
-function hideErrorMessage() {
-    const errorElement = document.getElementById("error-message");
-    errorElement.style.display = "none";
-}
-
-// התחלת שעון עדכון כל שניה
-function startClock() {
-    updateClock();
-    setInterval(updateClock, 1000);
-}
+// טעינת פונקציות בעת פתיחת הדף
+document.addEventListener("DOMContentLoaded", function() {
+    setupLoginForm();
+    startClock();
+});

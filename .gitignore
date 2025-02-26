@@ -1,0 +1,41 @@
+# קבצי Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# קבצי לוג
+*.log
+
+# מפתחות והצפנות
+key.bin
+
+# קבצי סביבה
+.env
+*.env
+
+# קבצים של מערכת הפעלה
+.DS_Store
+Thumbs.db
+
+# קבצי venv (סביבת עבודה וירטואלית)
+venv/
+.env/
+.venv/
+
+# תיקיות וקבצי נתונים שנוצרים במהלך הריצה
+data/
+logs/
+
+# קבצים זמניים וקומפילציה
+*.swp
+*.swo
+*.bak
+
+# Node.js
+node_modules/
+
+# קבצי IDE שונים
+.vscode/
+.idea/
+*.iml

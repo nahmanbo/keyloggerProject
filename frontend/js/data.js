@@ -1,33 +1,50 @@
-// טקסט מוצפן (בפורמט Base64) עם שני מקטעים
-const encryptedText = "i+ro2Xer7FEmLQjsnt1xNB3grgNb5dlCpvYQGDi+9vyTpb60JMWiDHBdTIDdgCA2X/LxRA==i+ro2Xer7FEmLQjsnt1xNB3hrgNb5dlCpvYQGDi+9vyTpb60JMWiDHBdTIDdgCA2X4vvVB/Dmlqq/xFndMW3ypSVqcs44w==";
+// פונקציה לקריאת הנתונים מה-URL
+function getEncryptedDataFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('encryptedData');
+}
 
-document.getElementById("decryptButton").addEventListener("click", function () {
-    const keyFile = document.getElementById("keyInput").files[0];
+// קריאה בעת טעינת העמוד
+document.addEventListener("DOMContentLoaded", function () {
+    const encryptedText = getEncryptedDataFromUrl();
+    
+    if (encryptedText) {
+        console.log("🔒 נתונים מוצפנים שהתקבלו:", encryptedText);
+        
+        // לחצן לפענוח
+        document.getElementById("decryptButton").addEventListener("click", function () {
+            const keyFile = document.getElementById("keyInput").files[0];
 
-    if (keyFile) {
-        decryptFile(keyFile).then(decryptedJson => {
-            console.log("Decrypted Data:", decryptedJson);
-            displayDataAsTable(decryptedJson);
-        }).catch(error => {
-            console.error(error);
-            alert(error);
+            if (keyFile) {
+                decryptFile(keyFile, encryptedText).then(decryptedJson => {
+                    console.log("📜 נתונים מפוענחים:", decryptedJson);
+                    displayDataAsTable(decryptedJson);
+                }).catch(error => {
+                    console.error(error);
+                    alert(error);
+                });
+            } else {
+                alert("יש לבחור קובץ מפתח.");
+            }
         });
     } else {
-        alert("יש לבחור קובץ מפתח.");
+        alert("❌ לא נמצאו נתונים מוצפנים ב-URL.");
     }
 });
 
-async function decryptFile(keyFile) {
+// עדכון הפונקציה `decryptFile` לקבלת הנתונים מה-URL
+
+async function decryptFile(keyFile, encryptedText) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function (event) {
             const key = new Uint8Array(event.target.result);
 
-            // חלוקת המחרוזת לשני חלקים שמתחילים ב-i+ro2Xer
-            const encryptedParts = encryptedText.split(/(?=i\+ro2Xer)/g);
+            // חיפוש כל המחרוזות שמתחילות ב-"i+ro2X"
+            const encryptedParts = encryptedText.match(/i\+ro2X[A-Za-z0-9+/=]+/g);
 
-            if (encryptedParts.length < 2) {
-                return reject("שגיאה: לא נמצאו שתי מחרוזות מוצפנות.");
+            if (!encryptedParts || encryptedParts.length === 0) {
+                return reject("❌ שגיאה: לא נמצאו נתונים מוצפנים.");
             }
 
             try {
@@ -39,10 +56,10 @@ async function decryptFile(keyFile) {
 
                 resolve(mergedData);
             } catch (error) {
-                reject("שגיאה בפענוח הנתונים: " + error);
+                reject("❌ שגיאה בפענוח הנתונים: " + error);
             }
         };
-        reader.onerror = () => reject("שגיאה בקריאת קובץ המפתח.");
+        reader.onerror = () => reject("❌ שגיאה בקריאת קובץ המפתח.");
         reader.readAsArrayBuffer(keyFile);
     });
 }

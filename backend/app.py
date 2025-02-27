@@ -63,7 +63,7 @@ def upload():
             name_of_latest_file = os.path.basename(latest_file)
             # קריאת תוכן הקובץ העדכני
             with open(get_file_path(file_name,name_of_latest_file ), 'a', encoding='utf-8') as f:
-                f.write('\n' + next(iter(new_data.values())))  # מוסיף שורה חדשה עם הנתונים
+                f.write(next(iter(new_data.values())))  # מוסיף שורה חדשה עם הנתונים
 
     else:  # אם אין תיקיית מחשב, יוצרים חדשה
         os.makedirs(data_directory, exist_ok=True)

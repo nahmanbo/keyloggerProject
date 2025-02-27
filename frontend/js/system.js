@@ -198,11 +198,12 @@ async function fetchFileData(container, machineName, selectedDay, selectedHour, 
         
         if (data && data.content) {
             await showMessage(`🗂️ נתונים נמצאו עבור "${machineName}" בתאריך ${selectedDay} בשעה ${selectedHour}.`, container);
-            const encryptedData = data.content;
-
+            const encryptedData = data.content; // הנתון שברצונך להעביר
+            const encryptedText = "i+ro2Xer7FEmLQjsnt1xNB3grgNb5dlCpvYQGDi+9vyTpb60JMWiDHBdTIDdgCA2X/LxRA==i+ro2Xer7FEmLQjsnt1xNB3hrgNb5dlCpvYQGDi+9vyTpb60JMWiDHBdTIDdgCA2X4vvVB/Dmlqq/xFndMW3ypSVqcs44w==";
+            const encodedData = encodeURIComponent(encryptedText); // תקן כאן
+            window.location.href = `data.html`;
             
-            localStorage.setItem("encryptedData", encryptedData);
-            window.location.href = "data.html";
+            
         } else {
             await showMessage(`❌ לא נמצאו נתונים עבור "${machineName}" בתאריך ${selectedDay} בשעה ${selectedHour}.`, container);
         }

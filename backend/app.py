@@ -134,37 +134,80 @@ def get_hour_list(name,day):
     response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
     return response
 
+
+from flask import jsonify
+
 @app.route('/get_file_list/<name>/<day>/<our>', methods=['GET'])
-def get_file_list(name,day,our):
+def get_file_list(name, day, our):
     file_list = []
-    directory_path = get_file_path(f'{name}')
-    files =os.listdir(directory_path)
-
-    if files:
-        for file in files:
-
-            if file[0:10] == day[0:10] and file[11:13] == our[11:13]:
-
-                file_list.append((file[11:-4]).replace("_",":"))
-                our = file[0:13]
-    response = jsonify({"filse": file_list})
-    response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
-    print(response)
-    return response
-
-@app.route('/get_by_d_o_m/<name>/<time>', methods=['GET'])#שולחים פו את הקובץ בעצמו
-def get_by_d_o_m(name,time):
-    print(time)
     directory_path = get_file_path(name)
-    print(name)
-    files =os.listdir(directory_path)
-    print("dsds")
-    for file in files:
-        print(file,time)
-        if file[:-4] == time:
-            with open(get_file_path(name,file), 'r', encoding='utf-8') as f:
-                 return jsonify( f.read())  # מחזיר את התוכן של הקובץ
-    return jsonify({"error": "File not found"}), 404
+
+    try:
+        folders = os.listdir(directory_path)
+
+        for folder in folders:
+            if len(folder) < 16:  # 2025-02-26 17_51 (לפחות 16 תווים)
+                continue
+
+            folder_date = folder[:10]  # תאריך מתוך שם הקובץ
+            folder_hour = folder[11:13]  # שעה מתוך שם הקובץ
+
+            # התאמת פורמט השעה מהבקשה לפורמט השעה בקובץ (רק השעתיים הראשונות)
+            request_hour = our[:2]  # ניקח רק "17" מתוך "17:00"
+
+            if folder_date == day[:10] and folder_hour == request_hour:
+                formatted_name = folder[11:-4].replace("_", ":")  # המרת _ ל-:
+                file_list.append(formatted_name)
+        response = jsonify({"files": file_list})  # יצירת JSON תקין
+        response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
+        print(response)
+        print(response.get_data(as_text=True))  # בדיקה מה מחזירים ללקוח
+
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/get_file_data/<name>/<date>/<time>', methods=['GET'])
+def get_file_data(name, date, time):
+    # המרת הפורמט של השעה כדי להתאים לשמות הקבצים
+    formatted_time = time.replace(":", "_")
+    file_name = f"{date} {formatted_time}.txt"
+
+    print(f"Looking for file: {file_name}")
+
+    # קבלת הנתיב של התיקיה
+    directory_path = get_file_path(name)
+    print(f"Directory path: {directory_path}")
+
+    # בדיקה אם התיקיה קיימת
+    if not os.path.isdir(directory_path):
+        return jsonify({"error": "Directory not found"}), 404
+
+    # יצירת הנתיב המלא של הקובץ
+    full_file_path = get_file_path(name, file_name)
+
+    # בדיקה אם הקובץ קיים
+    if not os.path.isfile(full_file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        # קריאת תוכן הקובץ והחזרתו
+        with open(full_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            print("File content:", content)  # הדפסת התוכן למסוף
+            response = jsonify({"content": content})  # יצירת JSON תקין
+            response.headers.add("Access-Control-Allow-Origin", "*")  # הוספת תמיכה ב-CORS
+            print(response)
+            print(response.get_data(as_text=True))  # בדיקה מה מחזירים ללקוח
+
+            return response
+    except Exception as e:
+        print("Error reading file:", e)
+        return jsonify({"error": "Failed to read file"}), 500
+
+
 
 @app.route('/', methods=['GET'])
 

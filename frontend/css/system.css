@@ -154,13 +154,13 @@ h2 {
     height: 30px; 
     font-size: 15px;
 }
-.menu-hour.menu-button {
+.menu-hour .menu-button {
     width: 160px; 
     height: 30px; 
     font-size: 15px;
 }
 
-.menu-file.menu-button {
+.menu-file .menu-button {
     width: 160px; 
     height: 30px; 
     font-size: 15px;

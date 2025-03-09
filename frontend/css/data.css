@@ -1,35 +1,70 @@
+
+#background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(50%) contrast(110%);
+}
+
 body {
-    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    background-color: #0A192F;
+    color: #F8F8F2;
     direction: rtl;
     text-align: center;
-    margin-top: 30px;
 }
-
-input, textarea {
-    width: 80%;
-    padding: 10px;
-    margin: 10px;
-    font-size: 16px;
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
 }
-
-button {
+#table-container {
+    position: absolute; /* אם רוצים שהאלמנט יזוז עם הדף, ניתן לשנות ל-fixed */
+    top: 80px; /* מרחק מהחלק העליון */
+    left: 40px; /* מרחק מהצד השמאלי */
+    right: 40px; /* מרחק מהצד הימני */
+    max-height: calc(100vh - 120px); /* גובה הדף (100vh) פחות 80px של ה-top ועוד 40px רווח תחתון */
+    overflow-y: auto; /* מאפשר גלילה אנכית במקרה שהטקסט חורג */
+    background-color: black;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px rgba(0, 255, 170, 0.5);
+    color: #F8F8F2;
+    text-shadow: 0px 0px 15px rgba(100, 255, 218, 0.7);
     padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+    font-family: Arial, sans-serif;
+    text-align: right;
+    direction: rtl;
 }
-
 table {
-    margin: 20px auto;
+    width: 100%;
     border-collapse: collapse;
-    width: 90%;
+    border-radius: 12px;
+    overflow: hidden;
 }
-
 th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    border: 1px solid #64FFDA;
+    background-color: black;
+
+    padding: 10px;
     text-align: right;
 }
-
 th {
-    background-color: #f2f2f2;
+    background-color: #112240;
+    font-weight: bold;
+}
+input[type="file"] {
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 20px;
 }

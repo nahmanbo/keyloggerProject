@@ -1,16 +1,20 @@
-
-from flask import Flask, request, jsonify
 import os
+from datetime import datetime
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-def get_file_path(file_name, folder_name=None):
-    """ מחזיר את הנתיב המלא לקובץ בתיקיית 'data'. """
-    return os.path.join('data', file_name, folder_name) if folder_name else os.path.join('data', file_name)
+#--------------------------------------------------------------
+# פונקציה לחילוץ זמן מתוך שם קובץ בפורמט מתאים
+def extract_time_from_filename(file_name):
+    try:
+        return datetime.strptime(file_name[:-4], '%Y-%m-%d_%H-%M')
+    except ValueError:
+        return None
 
-
-# בודק אם יש לפתוח קובץ חדש
-def check_if_open_new(file_name, name_of_new_folder):
+#--------------------------------------------------------------
+# פונקציה הבודקת אם יש צורך לפתוח קובץ חדש על פי הפרש של 5 דקות
+def check_if_open_new(file_name):
     """ בודק אם יש צורך לפתוח קובץ חדש על פי זמן השינוי. """
     data_directory = get_file_path(file_name)
 
@@ -19,57 +23,62 @@ def check_if_open_new(file_name, name_of_new_folder):
         return True
 
     latest_file = max((os.path.join(data_directory, f) for f in files), key=os.path.getmtime)
-    file_name = os.path.basename(latest_file)
-    print((name_of_new_folder[:-4]),(file_name[:-4]))
-    print(int(name_of_new_folder[-6:-4]),int(file_name[-6:-4]))
+    latest_file_time = extract_time_from_filename(os.path.basename(latest_file))
 
-    # אם הזמן בין שני הקבצים עולה על 5 דקות, נפתח קובץ חדש
-    # or
-    if  (int(name_of_new_folder[-6:-4]) - int(file_name[-6:-4]) >1 )or(name_of_new_folder[:-6]) != (file_name[:-6]):
-        print(name_of_new_folder, file_name)
+    if not latest_file_time:
+        return True  # אם הקובץ האחרון אינו בפורמט תקין, ניצור קובץ חדש
+
+    # בודק הפרש של יותר מ-5 דקות
+    if (datetime.now() - latest_file_time).total_seconds() > 300:
         return True
     return False
 
-
+#--------------------------------------------------------------
 # יצירת קובץ חדש
-def create_file(file_name, new_data):
-    """ יוצר קובץ חדש עם נתוני txt. """
-    name_of_new_folder = f'{next(iter(new_data.keys()))}.txt'
-    data = next(iter(new_data.values()))
+def create_file(file_name, encrypted_data):
+    """יוצר קובץ חדש עם המידע המוצפן בלבד"""
+    name_of_new_folder = f'{datetime.now().strftime("%Y-%m-%d_%H-%M")}.txt'
 
     with open(get_file_path(file_name, name_of_new_folder), 'w', encoding='utf-8') as f:
-        f.write(str(data))  # שמירה כטקסט ולא כ-JSON
+        f.write(encrypted_data)
 
-
+#--------------------------------------------------------------
 @app.route('/upload', methods=['POST'])
 def upload():
     """ מקבל נתונים ומעדכן את הקובץ המתאים. """
     new_data = request.get_json()
 
-    file_name = new_data["@"]  # מזהה המחשב
-    del new_data['@']  # הסרת המזהה ממילון הנתונים
+    file_name = new_data.get("@")
+    if not file_name:
+        return jsonify({"error": "Missing machine identifier"}), 400
+
+    encrypted_data = next(iter(new_data.values()))  # שליפת המידע המוצפן בלבד
 
     data_directory = get_file_path(file_name)
 
     if os.path.exists(data_directory):  # אם תיקיית המחשב קיימת
-        name_of_new_folder = f'{next(iter(new_data.keys()))}.txt'  # תיקון: שינוי סיומת ל-.txt
-
-        if check_if_open_new(file_name, name_of_new_folder):
-            create_file(file_name, new_data)
+        if check_if_open_new(file_name):
+            create_file(file_name, encrypted_data)
         else:
-
             files = os.listdir(data_directory)
             latest_file = max((os.path.join(data_directory, f) for f in files), key=os.path.getmtime)
             name_of_latest_file = os.path.basename(latest_file)
-            # קריאת תוכן הקובץ העדכני
-            with open(get_file_path(file_name,name_of_latest_file ), 'a', encoding='utf-8') as f:
-                f.write(next(iter(new_data.values())))  # מוסיף שורה חדשה עם הנתונים
+
+            with open(get_file_path(file_name, name_of_latest_file), 'a', encoding='utf-8') as f:
+                f.write(encrypted_data + '\n')  # הוספת שורה חדשה עם המידע המוצפן בלבד
 
     else:  # אם אין תיקיית מחשב, יוצרים חדשה
         os.makedirs(data_directory, exist_ok=True)
-        create_file(file_name, new_data)
+        create_file(file_name, encrypted_data)
 
     return '', 204
+
+#--------------------------------------------------------------
+# פונקציה ליצירת נתיב הקובץ
+def get_file_path(file_name, file=None):
+    base_path = os.path.join('data', file_name)
+    return os.path.join(base_path, file) if file else base_path
+
 #כל הפונקציות get
 @app.route('/get_machines', methods=['GET'])
 def get_machines():
@@ -135,8 +144,6 @@ def get_hour_list(name,day):
     return response
 
 
-from flask import jsonify
-
 @app.route('/get_file_list/<name>/<day>/<our>', methods=['GET'])
 def get_file_list(name, day, our):
     file_list = []
@@ -172,8 +179,8 @@ def get_file_list(name, day, our):
 @app.route('/get_file_data/<name>/<date>/<time>', methods=['GET'])
 def get_file_data(name, date, time):
     # המרת הפורמט של השעה כדי להתאים לשמות הקבצים
-    formatted_time = time.replace(":", "_")
-    file_name = f"{date} {formatted_time}.txt"
+    formatted_time = time.replace(" ", "_")
+    file_name = f"{date}_{formatted_time}.txt"
 
     print(f"Looking for file: {file_name}")
 
@@ -237,4 +244,4 @@ def show_data():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port = 5000,  debug=True)

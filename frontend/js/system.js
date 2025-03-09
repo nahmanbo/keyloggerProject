@@ -1,256 +1,188 @@
-// פונקציה לעדכון השעון
+// פונקציות תצוגה ושעון
 function updateClock() {
-    const clock = document.getElementById("clock");
-    const now = new Date();
-    clock.textContent = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById("clock").textContent = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-// התחלת שעון עם עדכון כל שניה
 function startClock() {
     updateClock();
     setInterval(updateClock, 1000);
 }
 
-// פונקציות עזר להצגת והסתרת אלמנטים
-function toggleElements(elements, action) {
-    elements.forEach(element => element.style.display = action);
-}
+// הודעות המערכת - מרוכזות במשתנים
+const MESSAGES = {
+    connecting: "🛰️ מתחבר לשרת",
+    connected: "✅ החיבור לשרת הושלם. בחר מחשב",
+    noMachines: "לא נמצאו מחשבים",
+    machineSelected: (name) => `🖥️ מחשב "${name}" נבחר. מחפש נתונים`,
+    machineDataFound: (name) => `🗂️ נמצאו נתונים עבור "${name}". בחר יום`,
+    noMachineData: (name) => `לא נמצאו נתונים עבור המחשב "${name}"`,
+    searchingData: (machine, day) => `⏳ מחפש נתונים עבור "${machine}" ביום "${day}"`,
+    dataFound: "🗂️ נמצאו נתונים. בחר שעה",
+    noDayData: (machine, day) => `לא נמצאו נתונים עבור המחשב "${machine}" בתאריך ${day}`,
+    searchingHourData: (machine, day, hour) => `⏳ מחפש נתונים עבור "${machine}" ביום "${day}" בשעה ${hour}`,
+    noHourData: (machine, day, hour) => `לא נמצאו נתונים עבור המחשב "${machine}" בתאריך ${day} בשעה ${hour}`,
+    loadingFile: (file) => `📡 טוען נתונים מהקובץ ${file}`,
+    redirecting: "🔍 מעבר לעמוד הנתונים",
+    errorFetch: (error) => `⚠️ אירעה תקלה בעת השליפה: ${error.message}`,
+    welcome: (name) => `ברוך הבא ${name}!`
+};
 
-// פונקציה להצגת הודעה עם אפקט הקלדה
-async function showMessage(message, container) {
-    return new Promise(resolve => {
-        typeMessageEffect(message, container);
-        setTimeout(resolve, message.length * 50);
-    });
-}
-
-// פונקציה לעיכוב
-function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// פונקציה לחיבור לשרת וטעינת מחשבים
-async function fetchMachines(container) {
-    try {
-        await showMessage("🛰️ מתחבר לשרת לקבלת נתונים...", container);
-        const response = await fetch('http://127.0.0.1:5000/get_machines');
-        const data = await response.json();
-        await wait(4000);
-
-        if (data && data.machines.length > 0) {
-            await showMessage("✅ החיבור לשרת הושלם בהצלחה. ", container);
-            await wait(1000);
-            createMachinesMenu(container, data.machines);
-            await showMessage("⏳ בחר מחשב מהרשימה:", container);
-        } else {
-            await showMessage("❌ לא נמצאו מחשבים.", container);
-        }
-    } catch (error) {
-        console.error("שגיאה בעת חיפוש רשימת מחשבים:", error);
-        await showMessage("⚠️ אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
+// פונקציה להצגת הודעה
+function showMessage(message, container, options = {}) {
+    const defaults = { newLine: false, separator: " → ", clear: false };
+    const settings = { ...defaults, ...options };
+    
+    if (settings.clear) {
+        const existingMessages = container.querySelectorAll('.message');
+        existingMessages.forEach(msg => container.removeChild(msg));
     }
-}
-
-// יצירת תפריט מחשבים
-function createMachinesMenu(container, machines) {
-    const menuMachines = document.createElement("div");
-    menuMachines.classList.add("menu-erea", "menu-machines");
-
-    machines.forEach(machine => {
-        const button = document.createElement("button");
-        button.textContent = machine;
-        button.classList.add("menu-button");
-        button.onclick = () => fetchDay(container, machine);
-        menuMachines.appendChild(button);
-    });
-
-    container.appendChild(menuMachines);
-}
-
-// פונקציה לחיפוש נתונים לפי יום
-async function fetchDay(container, machineName) {
-    await showMessage(`🖥️🔍המחשב "${machineName}" נבחר. מבצע חיפוש נתונים...`, container);
-
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/get_day_list/${machineName}`);
-        const data = await response.json();
-
-        if (data && data.days.length > 0) {
-            await showMessage(`🗂️ נתונים עבור המחשב "${machineName}" נמצאו. מציג את הנתונים כעת...`, container);
-            createDayMenu(container, machineName, data.days);
-            await showMessage("⏳ בחר יום כדי להציג את הנתונים, או הקש F כדי להציג את כל הנתונים עבור המחשב.", container);
-        } else {
-            await showMessage(`❌ לא נמצאו נתונים עבור המחשב "${machineName}".`, container);
-        }
-    } catch (error) {
-        console.error("שגיאה בעת חיפוש נתוני המחשב:", error);
-        await showMessage("⚠️ אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
-    }
-}
-
-// יצירת תפריט ימים
-function createDayMenu(container, machineName, days) {
-    const menuFiles = document.createElement("div");
-    menuFiles.classList.add("menu-erea", "menu-day");
-
-    days.forEach(day => {
-        const button = document.createElement("button");
-        button.textContent = day;
-        button.classList.add("menu-button");
-        button.onclick = () => fetchHour(container, machineName, day);
-        menuFiles.appendChild(button);
-    });
-
-    container.appendChild(menuFiles);
-}
-
-// פונקציה לחיפוש נתונים לפי שעה
-async function fetchHour(container, machineName, selectedDay) {
-    await showMessage(`⏳ מבצע חיפוש נתונים עבור "${machineName}" ביום "${selectedDay}"...`, container);
-
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/get_hour_list/${machineName}/${selectedDay}`);
-        const data = await response.json();
-
-        if (data && data.hours.length > 0) {
-            await showMessage(`🗂️ נתונים עבור המחשב "${machineName}" בתאריך ${selectedDay} נמצאו. מציג את הנתונים כעת...`, container);
-            createHourMenu(container, machineName, selectedDay, data.hours);
-            await showMessage("⏳ בחר שעה כדי להציג את הנתונים, או הקש F כדי להציג את כל הנתונים עבור המחשב.", container);
-        } else {
-            await showMessage(`❌ לא נמצאו נתונים עבור המחשב "${machineName}" בתאריך ${selectedDay}.`, container);
-        }
-    } catch (error) {
-        console.error("שגיאה בעת חיפוש נתונים:", error);
-        await showMessage("⚠️ אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
-    }
-}
-
-// יצירת תפריט שעות
-function createHourMenu(container, machineName, selectedDay, hours) {
-    const menuhour = document.createElement("div");
-    menuhour.classList.add("menu-erea", "menu-hour");
-
-    hours.forEach(hour => {
-        const button = document.createElement("button");
-        button.textContent = hour;
-        button.classList.add("menu-button");
-        button.onclick = () => fetchFile(container, machineName, selectedDay, hour);
-        menuhour.appendChild(button);
-    });
-
-    container.appendChild(menuhour);
-}
-
-// פונקציה לחיפוש קבצים
-async function fetchFile(container, machineName, selectedDay, selecteHour) {
-    await showMessage(`⏳ מבצע חיפוש נתונים עבור "${machineName}" ביום "${selectedDay}" בשעה ${selecteHour}...`, container);
-
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/get_file_list/${machineName}/${selectedDay}/${selecteHour}`);
-        const data = await response.json();
-
-        if (data && data.files.length > 0) {
-            await showMessage(`🗂️ נתונים עבור המחשב "${machineName}" בתאריך ${selectedDay} בשעה ${selecteHour} נמצאו. מציג את הנתונים כעת...`, container);
-            createFileMenu(container, machineName, selectedDay, selecteHour, data.files);
-        } else {
-            await showMessage(`❌ לא נמצאו נתונים עבור המחשב "${machineName}" בתאריך ${selectedDay} בשעה ${selecteHour}.`, container);
-        }
-    } catch (error) {
-        console.error("שגיאה בעת חיפוש נתונים:", error);
-        await showMessage("⚠️ אירעה תקלה בעת השליפה. אנא נסה שוב מאוחר יותר.", container);
-    }
-}
-
-// יצירת תפריט קבצים
-async function createFileMenu(container, machineName, selectedDay, selectedHour, files) {
-    const menuFiles = document.createElement("div");
-    menuFiles.classList.add("menu-erea", "menu-file");
-
-    if (files && files.length > 0) {
-        files.forEach(file => {
-            const button = document.createElement("button");
-            button.textContent = file;
-            button.classList.add("menu-button");
-            button.onclick = () => fetchFileData(container, machineName, selectedDay, selectedHour, file);
-            menuFiles.appendChild(button);
-        });
+    
+    const existingMessage = container.querySelector('.message:last-child');
+    if (settings.newLine || !existingMessage) {
+        const messageElement = document.createElement('p');
+        messageElement.classList.add('message');
+        messageElement.textContent = message;
+        container.appendChild(messageElement);
     } else {
-        console.log("❌ אין קבצים להצגה");
+        existingMessage.textContent += settings.separator + message;
     }
-    container.appendChild(menuFiles);
+    
+    return new Promise(resolve => setTimeout(resolve, 500));
 }
 
-// פונקציה לשליפת נתונים מקובץ
-async function fetchFileData(container, machineName, selectedDay, selectedHour, selectedFile) {
-    const url = `http://127.0.0.1:5000/get_file_data/${machineName}/${selectedDay}/${selectedFile}`;
-    await showMessage(`📡 מבצע בקשה לכתובת: ${url}`, container);
-
+// פונקציה לשליפת נתונים והצגתם
+async function fetchData(url, successCallback, errorMessage, container, messageOptions) {
     try {
         const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`❌ שגיאה: קוד סטטוס ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        console.log("📡 raw data מהשרת:", data);  // ✅ בדיקה ראשונה - נתונים ישירות מהשרת
+        if (!response.ok) throw new Error(`שגיאת שרת: ${response.status}`);
         
-        if (data && data.content) {
-            await showMessage(`🗂️ נתונים נמצאו עבור "${machineName}" בתאריך ${selectedDay} בשעה ${selectedHour}.`, container);
-            
-            const encryptedData = data.content; // הנתון המוצפן מהשרת
-            const encodedData = encodeURIComponent(encryptedData); // קידוד לפני העברה ב-URL
-            
-            // מעבר לעמוד data.html עם הנתונים
-            window.location.href = `data.html?encryptedData=${encodedData}`;
-            
+        const data = await response.json();
+        if (data && ((data.machines && data.machines.length > 0) || 
+                     (data.days && data.days.length > 0) || 
+                     (data.hours && data.hours.length > 0) || 
+                     (data.files && data.files.length > 0) ||
+                     data.content)) {
+            successCallback(data);
+            return true;
         } else {
-            await showMessage(`❌ לא נמצאו נתונים עבור "${machineName}" בתאריך ${selectedDay} בשעה ${selectedHour}.`, container);
+            showMessage(`❌ ${errorMessage}`, container, messageOptions);
+            return false;
         }
     } catch (error) {
-        console.error("❌ שגיאה בטעינת נתוני קובץ:", error);
-        await showMessage("⚠️ אירעה תקלה בעת טעינת הנתונים. אנא נסה שוב מאוחר יותר.", container);
+        console.error("שגיאה:", error);
+        showMessage(MESSAGES.errorFetch(error), container, messageOptions);
+        return false;
     }
 }
 
-
-
-// אפקט הקלדה להודעות
-function typeMessageEffect(message, container) {
-    const messageElement = document.createElement('p');
-    messageElement.classList.add('message');
-    container.appendChild(messageElement);
-
-    let i = 0;
-    function typeCharacter() {
-        if (i < message.length) {
-            messageElement.textContent = message.slice(0, i + 1);
-            i++;
-            setTimeout(typeCharacter, 50);
-        }
-    }
-    typeCharacter();
+// יצירת תפריטים
+function createMenu(container, items, itemClass, clickHandler) {
+    const menu = document.createElement("div");
+    menu.classList.add("menu-erea", itemClass);
+    
+    items.forEach(item => {
+        const button = document.createElement("button");
+        button.textContent = item;
+        button.classList.add("menu-button");
+        button.onclick = () => clickHandler(item);
+        menu.appendChild(button);
+    });
+    
+    container.appendChild(menu);
 }
 
-// אתחול הדף בעת טעינה
+// פונקציות ניהול בקשות
+async function fetchMachines(container) {
+    await showMessage(MESSAGES.connecting, container, { clear: true });
+    
+    fetchData(
+        'http://127.0.0.1:5000/get_machines',
+        (data) => {
+            showMessage(MESSAGES.connected, container);
+            createMenu(container, data.machines, "menu-machines", (machine) => fetchDay(container, machine));
+        },
+        MESSAGES.noMachines,
+        container
+    );
+}
+
+async function fetchDay(container, machineName) {
+    await showMessage(MESSAGES.machineSelected(machineName), container, { newLine: true });
+    
+    fetchData(
+        `http://127.0.0.1:5000/get_day_list/${machineName}`,
+        (data) => {
+            showMessage(MESSAGES.machineDataFound(machineName), container);
+            createMenu(container, data.days, "menu-day", (day) => fetchHour(container, machineName, day));
+        },
+        MESSAGES.noMachineData(machineName),
+        container
+    );
+}
+
+async function fetchHour(container, machineName, selectedDay) {
+    await showMessage(MESSAGES.searchingData(machineName, selectedDay), container, { newLine: true });
+    
+    fetchData(
+        `http://127.0.0.1:5000/get_hour_list/${machineName}/${selectedDay}`,
+        (data) => {
+            showMessage(MESSAGES.dataFound, container);
+            createMenu(container, data.hours, "menu-hour", (hour) => fetchFile(container, machineName, selectedDay, hour));
+        },
+        MESSAGES.noDayData(machineName, selectedDay),
+        container
+    );
+}
+
+async function fetchFile(container, machineName, selectedDay, selectedHour) {
+    await showMessage(MESSAGES.searchingHourData(machineName, selectedDay, selectedHour), container, { newLine: true });
+    
+    fetchData(
+        `http://127.0.0.1:5000/get_file_list/${machineName}/${selectedDay}/${selectedHour}`,
+        (data) => {
+            showMessage(MESSAGES.dataFound, container);
+            createMenu(container, data.files, "menu-file", (file) => fetchFileData(container, machineName, selectedDay, selectedHour, file));
+        },
+        MESSAGES.noHourData(machineName, selectedDay, selectedHour),
+        container
+    );
+}
+
+async function fetchFileData(container, machineName, selectedDay, selectedHour, selectedFile) {
+    await showMessage(MESSAGES.loadingFile(selectedFile), container, { newLine: true });
+    
+    fetchData(
+        `http://127.0.0.1:5000/get_file_data/${machineName}/${selectedDay}/${selectedFile}`,
+        (data) => {
+            if (data.content) {
+                showMessage(MESSAGES.redirecting, container);
+                const encodedData = encodeURIComponent(data.content);
+                window.location.href = `data.html?encryptedData=${encodedData}`;
+            }
+        },
+        MESSAGES.noHourData(machineName, selectedDay, selectedHour),
+        container
+    );
+}
+
+// אתחול הדף
 document.addEventListener('DOMContentLoaded', async function() {
     const username = localStorage.getItem('username');
-    const usernameDiv = document.getElementById('username');
-    usernameDiv.textContent = `🔒${username}`;
+    document.getElementById('username').textContent = `🔒${username}`;
     
     const loginMessage = document.querySelector('.login-message');
     const messageContainer = document.getElementById('message-container');
-
+    
     startClock();
-    toggleElements([messageContainer], 'none');
-    toggleElements([loginMessage], 'block');
-
-    await wait(3000);
-    toggleElements([loginMessage], 'none');
-    toggleElements([messageContainer], 'block');
-
-    await showMessage(`ברוך הבא ${username}!`, messageContainer);
-    await wait(1000);
-    await fetchMachines(messageContainer);
+    
+    loginMessage.style.display = 'block';
+    messageContainer.style.display = 'none';
+    
+    setTimeout(async () => {
+        loginMessage.style.display = 'none';
+        messageContainer.style.display = 'block';
+        
+        await showMessage(MESSAGES.welcome(username), messageContainer, { clear: true });
+        await fetchMachines(messageContainer);
+    }, 1000);
 });
